@@ -1,0 +1,87 @@
+{% extends "layout.html" %}
+{% block body %}
+{% for entry in entries %}
+<div class="content">
+  <h1>Edit Activity: {{entry.ACT_ID}}</h1>
+  <br>
+
+<form action="{{ url_for('update') }}" method=post>
+  <table>
+
+    <tr>
+      <th>ActID
+      </th>
+      <td>
+        <input type="text" name="dummy" value="{{entry.ACT_ID}}" disabled="True">
+        <input type="text" name="ACT_ID" value="{{entry.ACT_ID}}" hidden="True">
+      </td>
+    </tr>
+    <tr>
+      <th>Nombre de la Ventana
+      </th>
+      <td><input type="text" name="Nombre_Ventana" value="{{entry.Nombre_Ventana}}">
+      </td>
+    </tr>
+    <tr>
+      <th>Descripcion Actividades
+      </th>
+      <td><input type="text" name="Descripcion" value="{{entry.Descripcion}}">
+      </td>
+    </tr>
+    <tr>
+      <th>Fecha Actividad
+      </th>
+      <td><input type="text" name="Fecha_Ventana" value="{{entry.Fecha_Ventana}}">
+      </td>
+    </tr>
+    <tr>
+      <th>Horario
+      </th>
+      <td><input type="text" name="Horario_Ventana" value="{{entry.Horario_Ventana}}">
+      </td>
+    </tr>
+    <tr>
+      <th>NCE
+      </th>
+      <td><input type="text" name="NCE_Ventana" value="{{entry.NCE_Ventana}}">
+      </td>
+    </tr>
+    <tr>
+      <th>Entrega Documentos
+      </th>
+      <td><input type="text" name="Entrega_Doc_Ventana" value="{{entry.Entrega_Doc_Ventana}}">
+      </td>
+    </tr>
+    <tr>
+      <th>Requerimientos
+      </th>
+      <td><input type="text" name="Requerimientos_Ventana" value="{{entry.Requerimientos_Ventana}}">
+      </td>
+    </tr>
+    <tr>
+      <th>Estado
+      </th>
+      <td><input type="text" name="Estado_Ventana" value="{{entry.Estado_Ventana}}">
+      </td>
+    </tr>
+    <tr>
+      <th>Recipients
+      </th>
+      <td><input type="text" name="Emails_Ventana" value="{{entry.Emails_Ventana}}">
+      </td>
+    </tr>
+  {% endfor %}
+  <tr>
+
+    <th>
+      {% for entry in entries %}
+      <a href ="{{url_for('open_query', sheetId=entry.sheetId)}}">Back</a>
+      {% endfor %}
+    </th>
+    <td><input type="submit" name="button" value="Update_Entry">
+    </td>
+  </tr>
+</table>
+</form>
+</div>
+{% endblock %}

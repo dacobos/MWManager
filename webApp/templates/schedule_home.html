@@ -1,0 +1,30 @@
+{% extends "layout.html" %}
+{% block body %}
+<div class="content">
+  <h1>Select the project</h1>
+
+  <form action="{{ url_for('open_query') }}" method=post>
+  <table>
+    <tr>
+      <td>Select the Sheet
+      </td>
+      <td>
+        <select name=sheetId>
+          <dd><option value="--">--</option>
+          {% for sheet in sheets %}
+            <dd><option value="{{sheet.sheetId}}">{{sheet.projectId}}-{{sheet.country}}-{{sheet.capexCicle}}-{{sheet.projectManager}}-{{sheet.projectName}}</option>
+          {% endfor %}
+        </select>
+      </td>
+    </tr>
+    <tr>
+      <td>
+      </td>
+      <td><input type="submit" name="button" value="Open_Query">
+      </td>
+    </tr>
+  </table>
+  <form>
+
+</div>
+{% endblock %}

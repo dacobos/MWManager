@@ -1,0 +1,57 @@
+{% extends "layout.html" %}
+{% block body %}
+
+<script>
+setInterval(function(){
+  document.getElementById("iframe").innerHTML="<h2>Output Console</h2><iframe  src='{{url_for('logfile')}}'></iframe>";
+
+}, 5000)
+
+</script>
+
+
+<div class="content">
+  <h1>Verify PE Status</h1>
+  <br>
+  <div class="tables">
+    <h2>Select Device</h2>
+  <form action="{{url_for('verify')}}" method="POST">
+  <table>
+    <tr>
+      <td>PE Device:</td>
+      <td>
+        <select name="ipAddress">
+            <dd><option value="">--</option>
+            <dd><option value="10.192.65.134">ALT-CSC007609-M1</option>
+            <dd><option value="10.192.65.15">SON-CSC007606-M1</option>
+            <dd><option value="10.192.65.7">ATL-CSCASR9006-M1</option>
+        </select>
+      </td>
+    </tr>
+
+    <tr>
+      <td>Username:</td>
+      <td><input type="text" name="userName"></td>
+    </tr>
+
+    <tr>
+      <td>Password:</td>
+      <td><input type="password" name="passWord"></td>
+    </tr>
+
+    <tr>
+      <td><input type="submit" name="button" value="Verify-PE" ></td>
+      <td><input type="submit" name="button" value="Clear-Log" > </td>
+    </tr>
+</table>
+</form>
+</div>
+<div class="console" id="iframe">
+  <h2>Output Console</h2>
+  <iframe  src="{{url_for('logfile')}}" style="color: white;"></iframe>
+</div>
+
+</div>
+
+
+{% endblock %}

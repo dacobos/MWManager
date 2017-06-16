@@ -1,0 +1,131 @@
+{% extends "layout.html" %}
+{% block body %}
+
+<script>
+function create_mw() {
+     document.getElementById("list").style.display="none";
+     document.getElementById("create").style.display="table";
+     document.getElementById("query").style.display="none";
+     document.getElementById("show").style.display="none";
+     document.getElementById("start").style.display="none";
+     document.getElementById("end").style.display="none";
+     document.getElementById("email").style.display="none";
+     document.getElementById("title").innerHTML='<h2>Create_MW</h2>';
+}
+function query_mw() {
+     document.getElementById("list").style.display="none";
+     document.getElementById("create").style.display="none";
+     document.getElementById("query").style.display="table";
+     document.getElementById("show").style.display="none";
+     document.getElementById("start").style.display="none";
+     document.getElementById("end").style.display="none";
+     document.getElementById("email").style.display="none";
+     document.getElementById("title").innerHTML='<h2>Query_MW</h2>';
+}
+
+</script>
+<div class="content">
+  <h1>Schedule MW</h1>
+  <br>
+  <div class="tables">
+    <h2>Menu</h2>
+    <form action="{{ url_for('query_mw') }}" method=post>
+    <table>
+      <tr>
+        <td><input type="submit" name="button" value="Schedule_Home"></td>
+      </tr>
+      <tr>
+        {% for p in param %}
+        <input type="text" name="sheetId" value="{{p.sheetId}}" hidden="True">
+        {% endfor %}
+
+        {% for entry in entries %}
+        <input type="text" hidden="True" name="Project" value="{{entry.Project}}">
+        <input type="text" hidden="True" name="PID" value="{{entry.PID}}">
+        <input type="text" hidden="True" name="ActID" value="{{entry.ActID}}">
+        <input type="text" hidden="True" name="Nombre" value="{{entry.Nombre}}">
+        <input type="text" hidden="True" name="Descripcion" value="{{entry.Descripcion}}">
+        <input type="text" hidden="True" name="Fecha" value="{{entry.Fecha}}">
+        <input type="text" hidden="True" name="Horario" value="{{entry.Horario}}">
+        <input type="text" hidden="True" name="NCE" value="{{entry.NCE}}">
+        <input type="text" hidden="True" name="Entrega_Doc" value="{{entry.Entrega_Doc}}">
+        <input type="text" hidden="True" name="Requerimientos" value="{{entry.Requerimientos}}">
+        <input type="text" hidden="True" name="Estado" value="{{entry.Estado}}">
+        {% endfor %}
+        <td><input type="submit" name="button" value="Email_Request"></td>
+      </tr>
+      <tr>
+        <td><input type="submit" name="button" value="Email_Program" ></td>
+      </tr>
+    </table>
+  </form>
+  </div>
+  <div class="console">
+    <div id="title">
+      <h2>Query_MW</h2>
+    </div>
+
+<br>
+
+<table style="display: table;" id="query">
+  {% for entry in entries %}
+  <tr>
+    <td>Proyecto</td>
+    <td>{{entry.Project}}</td>
+  </tr>
+  <tr>
+    <td>PID</td>
+    <td>{{entry.PID}}</td>
+  </tr>
+  <tr>
+    <td>ACT ID</td>
+    <td>{{entry.ActID}}</td>
+  </tr>
+  {% endfor %}
+</table>
+<br>
+<table style="display: table;" id="query">
+  <tr>
+    <th>Nombre de la Ventana
+    </th>
+    <th>Descripcion Actividades
+    </th>
+    <th>Fecha Actividad
+    </th>
+    <th>Horario
+    </th>
+    <th>NCE
+    </th>
+    <th>Entrega Documentos
+    </th>
+    <th>Requerimientos
+    </th>
+    <th>Estado
+    </th>
+  </tr>
+
+  <tr>
+    {% for entry in entries %}
+    <td>{{entry.Nombre}}
+    </td>
+    <td>{{entry.Descripcion}}
+    </td>
+    <td>{{entry.Fecha}}
+    </td>
+    <td>{{entry.Horario}}
+    </td>
+    <td>{{entry.NCE}}
+    </td>
+    <td>{{entry.Entrega_Doc}}
+    </td>
+    <td>{{entry.Requerimientos}}
+    </td>
+    <td>{{entry.Estado}}
+    </td>
+  </tr>
+  {% endfor %}
+</table>
+
+  </div>
+</div>
+{% endblock %}

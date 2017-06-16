@@ -1,0 +1,74 @@
+{% extends "layout.html" %}
+{% block body %}
+<div class="content">
+  {% for entry in param %}
+  <h1>Query Project: {{entry.Project}}</h1>
+  <br>
+<form action="{{ url_for('action') }}" method=post>
+  <table>
+
+    <tr>
+      <td>Proyecto</td>
+      <td>{{entry.Project}}</td>
+    </tr>
+    <tr>
+      <td>PID</td>
+      <td>{{entry.PID}}</td>
+    </tr>
+    <input type="text" hidden="True" name="PID" value="{{entry.PID}}">
+    {% endfor %}
+  </table>
+  <br>
+  <table>
+    <tr>
+      <th>ActID
+      </th>
+      <th>Nombre de la Ventana
+      </th>
+      <th>Descripcion Actividades
+      </th>
+      <th>Fecha Actividad
+      </th>
+      <th>Horario
+      </th>
+      <th>NCE
+      </th>
+      <th>Entrega Documentos
+      </th>
+      <th>Requerimientos
+      </th>
+      <th>Estado
+      </th>
+      <th>Accion
+      </th>
+    </tr>
+
+    <tr>
+      {% for entry in entries %}
+      <td><a href ="{{url_for('edit', ActID=entry.ACT_ID, sheetId=entry.sheetId)}}">{{entry.ACT_ID}}</a>
+      </td>
+      <td>{{entry.Nombre_Ventana}}
+      </td>
+      <td>{{entry.Descripcion}}
+      </td>
+      <td>{{entry.Fecha_Ventana}}
+      </td>
+      <td>{{entry.Horario_Ventana}}
+      </td>
+      <td>{{entry.NCE_Ventana}}
+      </td>
+      <td>{{entry.Entrega_Doc_Ventana}}
+      </td>
+      <td>{{entry.Requerimientos_Ventana}}
+      </td>
+      <td>{{entry.Estado_Ventana}}
+      </td>
+      <td><input type="submit" name="{{entry.ACT_ID}}" value="{{entry.Accion}}">
+      </td>
+    </tr>
+
+    {% endfor %}
+  </table>
+</form>
+</div>
+{% endblock %}

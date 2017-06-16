@@ -1,0 +1,164 @@
+{% extends "layout.html" %}
+{% block body %}
+
+<script>
+function create_mw() {
+     document.getElementById("list").style.display="none";
+     document.getElementById("create").style.display="table";
+     document.getElementById("query").style.display="none";
+     document.getElementById("show").style.display="none";
+     document.getElementById("start").style.display="none";
+     document.getElementById("end").style.display="none";
+     document.getElementById("email").style.display="none";
+     document.getElementById("title").innerHTML='<h2>Create_MW</h2>';
+}
+function query_mw() {
+     document.getElementById("list").style.display="none";
+     document.getElementById("create").style.display="none";
+     document.getElementById("query").style.display="table";
+     document.getElementById("show").style.display="none";
+     document.getElementById("start").style.display="none";
+     document.getElementById("end").style.display="none";
+     document.getElementById("email").style.display="none";
+     document.getElementById("title").innerHTML='<h2>Query_MW</h2>';
+}
+
+</script>
+<div class="content">
+  <h1>Schedule MW</h1>
+  <br>
+  <div class="tables">
+    <h2>Menu</h2>
+    <table>
+      <tr>
+        <td><input type="submit" name="button" value="Create_MW" onclick="create_mw()" ></td>
+      </tr>
+      <tr>
+        <td><input type="submit" name="button" value="Query_MW" onclick="query_mw()"></td>
+      </tr>
+      <tr>
+        <td><input type="submit" name="button" value="Start_MW" ></td>
+      </tr>
+      <tr>
+        <td><input type="submit" name="button" value="End_MW" ></td>
+      </tr>
+      <tr>
+        <td><input type="submit" name="button" value="Email_Alarms" ></td>
+      </tr>
+    </table>
+  </div>
+  <div class="console">
+    <div id="title">
+    </div>
+
+<form action="{{ url_for('query_mw') }}" method=post>
+<table style="display: none;" id="query">
+  <tr>
+    <td>Select the Sheet
+    </td>
+    <td>
+      <select name=sheetId>
+        <dd><option value="--">--</option>
+        {% for sheet in sheets %}
+          <dd><option value="{{sheet.sheetId}}">{{sheet.projectId}}-{{sheet.country}}-{{sheet.capexCicle}}-{{sheet.projectManager}}-{{sheet.projectName}}</option>
+        {% endfor %}
+      </select>
+    </td>
+  </tr>
+  <!-- <tr>
+    <td>Enter de ACT ID
+    </td>
+    <td><input type="text" name="actId" placeholder="Ex:77777-VM04">
+    </td>
+  </tr> -->
+  <tr>
+    <td>
+    </td>
+    <td><input type="submit" name="button" value="Open_Query">
+    </td>
+  </tr>
+</table>
+<form>
+
+<table style="display: none;" id="list">
+  <th>
+    <td>rirId</td>
+    <td>nceLead</td>
+    <td>claroPm</td>
+    <td>emailList</td>
+    <td>deviceList</td>
+    <td>started</td>
+    <td>finished</td>
+  </th>
+  <tr>
+    {% for entry in entries %}
+    <td>{{entry.rirId}}</td>
+    <td>{{entry.nceLead}}</td>
+    <td>{{entry.claroPm}}</td>
+    <td>{{entry.emailList}}</td>
+    <td>{{entry.deviceList}}</td>
+    <td>{{entry.started}}</td>
+    <td>{{entry.finished}}</td>
+    {% endfor %}
+  </tr>
+</table>
+
+
+
+
+
+
+<form action="{{ url_for('mwindows') }}" method=post>
+<table style="display: none;" id="create">
+  <tr>
+    <td>RIR ID
+    </td>
+    <td><input type="text" name="rirID" placeholder="Ex:181925">
+    </td>
+  </tr>
+  <tr>
+    <td>NCE Lead
+    </td>
+    <td><input type="text" name="nceLead" placeholder="Ex:Name Lastname">
+    </td>
+  </tr>
+  <tr>
+    <td>Claro PM
+    </td>
+    <td><input type="text" name="claroPm" placeholder="Ex:Name Lastname">
+    </td>
+  </tr>
+  <tr>
+    <td>Mail List
+    </td>
+    <td><input type="text" name="emailList" placeholder="Ex:nLastname@cisco.com, Lastname.Name@claro.com.sv">
+    </td>
+  </tr>
+  <tr>
+    <td>Device List
+    </td>
+     <td><input type="text" name="deviceList" placeholder="Ex:SON-CSC007606-M1, ALT-CSC007609-M1">
+    </td>
+  </tr>
+  <tr>
+    <td>
+    </td>
+    <td><input type="submit" name="button" value="Create_MW" >
+    </td>
+  </tr>
+</table>
+</form>
+<table style="display: none;" id="show">
+</table>
+
+<table style="display: none;" id="start">
+</table>
+
+<table style="display: none;" id="end">
+</table>
+
+<table style="display: none;" id="email">
+</table>
+  </div>
+</div>
+{% endblock %}
