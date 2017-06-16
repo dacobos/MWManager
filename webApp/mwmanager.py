@@ -5,6 +5,7 @@
 ##################################  IMPORTS   ##################################
 
 # Following task shall be done
+# TODO: Define environment variable APP_HOME as the path for application
 # TODO: Install python libraries: pyOpenSSL, requests, json, smtplib, flask, threading, subprocess, shutil
 # TODO: Define environment variable SMARTSHEET_ACCESS_TOKEN as the credentiasl to access smartsheet
 # TODO: Define environment variable SS_WORKSPACE as the workspace where all the projects are located
@@ -24,10 +25,10 @@ from shutil import copyfile
 
 
 # Support Scripts for web application
-sys.path.insert(0, '/Users/dacobos/Development/MWManager/scripts')
+sys.path.insert(0, os.environ['APP_HOME']+'scripts')
 from rest_helper import *
 
-sys.path.insert(0, '/Users/dacobos/Development/MWManager/scripts')
+sys.path.insert(0, os.environ['APP_HOME']+'scripts')
 from email_helper import *
 
 
@@ -44,8 +45,7 @@ app.config.update(dict(
     SECRET_KEY='development key',
     USERNAME='admin',
     PASSWORD='default',
-    LOG_FILE = '/Users/dacobos/Development/MWManager/logs/logfile.log',
-    APP_HOME = '/Users/dacobos/Development/MWManager/webApp/',
+    LOG_FILE = os.environ['APP_HOME']+'logs/logfile.log',
     ERROR = None,
     TOKEN=os.environ['SMARTSHEET_ACCESS_TOKEN'],
     WORKSPACE = os.environ['SS_WORKSPACE']
@@ -256,7 +256,7 @@ def schedule_home():
 def open_query():
 
     # # Get a list of ActID
-    # with open("/Users/dacobos/Development/MWManager/logs/"+request.form["sheetId"]) as f:
+    # with open(os.environ['APP_HOME']+"logs/"+request.form["sheetId"]) as f:
     #     sheet = f.read()
     # # Convert the string of the sheet to a sheet in JSON
     # sheet = json.loads(sheet)
@@ -269,7 +269,7 @@ def open_query():
     #Create a text file wich contains all the content of the selected sheet_id= '6595213704619908', token=os.environ['SMARTSHEET_ACCESS_TOKEN'],
     sheet = getSheet2(sheet_id = sheet_id, token=os.environ['SMARTSHEET_ACCESS_TOKEN'])
     sheet = sheet.encode('utf-8')
-    with open("/Users/dacobos/Development/MWManager/logs/"+sheet_id,"w") as f:
+    with open(os.environ['APP_HOME']+"logs/"+sheet_id,"w") as f:
         f.write(sheet)
     # Convert the string of the sheet to a sheet in JSON
     sheet = json.loads(sheet)
@@ -355,7 +355,7 @@ def action():
     PID = str(data[0][1])
 
     # Get a list of ActID
-    with open("/Users/dacobos/Development/MWManager/logs/"+sheet_id) as f:
+    with open(os.environ['APP_HOME']+"logs/"+sheet_id) as f:
         sheet = f.read()
     # Convert the string of the sheet to a sheet in JSON
     sheet = json.loads(sheet)
@@ -391,7 +391,7 @@ def action():
         return render_template('schedule_home.html', error = error)
 
     # Get the entries of selected mwindows
-    with open("/Users/dacobos/Development/MWManager/logs/"+sheet_id) as f:
+    with open(os.environ['APP_HOME']+"logs/"+sheet_id) as f:
         sheet = f.read()
     # Convert the string of the sheet to a sheet in JSON
     sheet = json.loads(sheet)
@@ -486,7 +486,7 @@ def edit():
     sheet_id = str(data[0][2])
 
     # Get the entries of selected mwindow
-    with open("/Users/dacobos/Development/MWManager/logs/"+sheet_id) as f:
+    with open(os.environ['APP_HOME']+"logs/"+sheet_id) as f:
         sheet = f.read()
     # Convert the string of the sheet to a sheet in JSON
     sheet = json.loads(sheet)
@@ -567,7 +567,7 @@ def update():
     sheet_id = str(data[0][2])
 
     # Get a list of ActID
-    with open("/Users/dacobos/Development/MWManager/logs/"+sheet_id) as f:
+    with open(os.environ['APP_HOME']+"logs/"+sheet_id) as f:
         sheet = f.read()
     # Convert the string of the sheet to a sheet in JSON
     sheet = json.loads(sheet)
@@ -621,7 +621,7 @@ def update():
     #Update the local file of query
     sheet = getSheet2(sheet_id = sheet_id, token=app.config['TOKEN'])
     sheet = sheet.encode('utf-8')
-    with open("/Users/dacobos/Development/MWManager/logs/"+sheet_id,"w") as f:
+    with open(os.environ['APP_HOME']+"logs/"+sheet_id,"w") as f:
         f.write(sheet)
     flash('Notification: Entry updated successfully')
     return redirect(url_for('edit', ActID = ActID, sheetId=sheet_id))
