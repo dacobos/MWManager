@@ -460,7 +460,7 @@ def action():
         return redirect(url_for('open_query', sheetId=sheet_id))
     else:
         error = "Could't sent the email, did not changed anything"
-        return render_template('open_query',sheetId=sheet_id, error=error)
+        return redirect(url_for('open_query', sheetId=sheet_id))
 
 @app.route('/edit', methods = ['GET','POST'])
 def edit():
