@@ -32,6 +32,10 @@ from email_helper import *
 
 
 app = Flask(__name__) # create the application instance :)
+
+if __name__ == "__main__":
+	app.run(host='0.0.0.0')
+
 app.config.from_object(__name__) # load config from this file
 
 # Load default config and override config from an environment variable
