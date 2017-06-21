@@ -66,9 +66,16 @@
       <td><input type="submit" name="{{entry.ACT_ID}}" value="{{entry.Accion}}">
       </td>
     </tr>
-
     {% endfor %}
   </table>
 </form>
+
+{% for entry in param %}
+<h3>
+<a href ="{{url_for('schedule_home')}}">Back</a>
+<a href ="{{url_for('create', PID=entry.PID)}}">Create New MW</a>
+<a href ="{{url_for('specReport', PID=entry.PID)}}">Generate Report</a>
+</h3>
+{% endfor %}
 </div>
 {% endblock %}

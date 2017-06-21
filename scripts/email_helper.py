@@ -5,7 +5,7 @@
 ##################################  IMPORTS   ##################################
 
 # Following task shall be done
-# TODO: Install python libraries: pyOpenSSL, requests, json, smtplib, flask, threading, subprocess, shutil
+# TODO: Install python libraries: pyOpenSSL, requests, json, smtplib, flask, threading, subprocess, shutil, Pysocks
 # TODO: Define environment variable SMARTSHEET_ACCESS_TOKEN as the credentiasl to access smartsheet
 # TODO: Define environment variable GMAIL_ACCOUNT as the source of the Emails_Ventana
 # TODO: Define environment variable GMAIL_PWD as the password of the GMAIL_ACCOUNT
@@ -15,12 +15,15 @@ import smtplib
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 import os
+import socks
+
+socks.setdefaultproxy(socks.SOCKS5, 'proxy-rtp-1', 1080)
+socks.wrapmodule(smtplib)
 
 
 def mwMIME(inp, recipients, subject):
     origin = os.environ['GMAIL_ACCOUNT']
     origin_pwd = os.environ['GMAIL_PWD']
-
 
     # Create message container - the correct MIME type is multipart/alternative.
     msg = MIMEMultipart('alternative')
@@ -208,3 +211,4 @@ def mwMIME(inp, recipients, subject):
         print error
 
     return error
+# 17:37

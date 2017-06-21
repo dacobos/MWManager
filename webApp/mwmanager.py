@@ -6,7 +6,7 @@
 
 # Following task shall be done
 # TODO: Define environment variable APP_HOME as the path for application
-# TODO: Install python libraries: pyOpenSSL, requests, json, smtplib, flask, threading, subprocess, shutil
+# TODO: Install python libraries: pyOpenSSL, requests, json, smtplib, flask, threading, subprocess, shutil, XlsxWriter
 # TODO: Define environment variable SMARTSHEET_ACCESS_TOKEN as the credentiasl to access smartsheet
 # TODO: Define environment variable SS_WORKSPACE as the workspace where all the projects are located
 # TODO: Define environment variable GMAIL_ACCOUNT as the source of the Emails_Ventana
@@ -31,17 +31,19 @@ from rest_helper import *
 sys.path.insert(0, os.environ['APP_HOME']+'scripts')
 from email_helper import *
 
+sys.path.insert(0, os.environ['APP_HOME']+'scripts')
+from reports_helper import *
 
-app = Flask(__name__) # create the application instance :)
+application = Flask(__name__) # create the application instance :)
 
 if __name__ == "__main__":
-	app.run(host='0.0.0.0')
+	application.run(host='0.0.0.0')
 
-app.config.from_object(__name__) # load config from this file
+application.config.from_object(__name__) # load config from this file
 
 # Load default config and override config from an environment variable
-app.config.update(dict(
-    DATABASE=os.path.join(app.root_path, 'mwmanager.db'),
+application.config.update(dict(
+    DATABASE=os.path.join(application.root_path, 'mwmanager.db'),
     SECRET_KEY='development key',
     USERNAME='admin',
     PASSWORD='default',
@@ -53,13 +55,13 @@ app.config.update(dict(
 
 ))
 
-# app.config.from_envvar('FLASKR_SETTINGS', silent=True)
+# application.config.from_envvar('FLASKR_SETTINGS', silent=True)
 
 
 # Functions to CRUD on SQL Database
 def connect_db():
     """Connects to the specific database."""
-    rv = sqlite3.connect(app.config['DATABASE'])
+    rv = sqlite3.connect(application.config['DATABASE'])
     rv.row_factory = sqlite3.Row
     return rv
 
@@ -71,7 +73,7 @@ def get_db():
         g.sqlite_db = connect_db()
     return g.sqlite_db
 
-@app.teardown_appcontext
+@application.teardown_appcontext
 def close_db(error):
     """Closes the database again at the end of the request."""
     if hasattr(g, 'sqlite_db'):
@@ -80,7 +82,7 @@ def close_db(error):
 
 def init_db():
     db = get_db()
-    with app.open_resource('schema.sql', mode='r') as f:
+    with application.open_resource('schema.sql', mode='r') as f:
         db.cursor().executescript(f.read())
     db.commit()
     update_db()
@@ -88,10 +90,10 @@ def init_db():
 
 def update_db():
     db = get_db()
-    folders = getFolders(workspace = app.config['WORKSPACE'], token=app.config['TOKEN'])
+    folders = getFolders(workspace = application.config['WORKSPACE'], token=application.config['TOKEN'])
     xxx = []
     for folder in folders["folders"]:
-        sheets = getSheets(folderId = str(folder["id"]), token=app.config['TOKEN'])
+        sheets = getSheets(folderId = str(folder["id"]), token=application.config['TOKEN'])
         for sheet in sheets["sheets"]:
             sheetName = sheet["name"].split("-")
             sheetId = sheet["id"]
@@ -107,7 +109,7 @@ def update_db():
     db.commit()
 
 
-@app.cli.command('initdb')
+@application.cli.command('initdb')
 def initdb_command():
     """Initializes the database."""
     init_db()
@@ -115,12 +117,12 @@ def initdb_command():
     print('Initialized the database.')
 
 # Start of Web App
-@app.route('/')
+@application.route('/')
 def index():
     return render_template('index.html')
 
 # Version1
-@app.route('/mwindows')
+@application.route('/mwindows')
 def mwindows():
     try:
         db = get_db()
@@ -132,7 +134,7 @@ def mwindows():
 
 
 def getQuery(request):
-    sheet = getSheet(sheet_id = request.form["sheetId"], token=app.config['TOKEN'])
+    sheet = getSheet(sheet_id = request.form["sheetId"], token=application.config['TOKEN'])
     row = getRow(rows = sheet["rows"], act_id = request.form["actId"])
     if row:
         pidName = getPidName(request.form["sheetId"])
@@ -153,7 +155,7 @@ def getQuery(request):
 
 
 
-@app.route('/query_mw', methods = ['GET','POST'])
+@application.route('/query_mw', methods = ['GET','POST'])
 def query_mw():
     if request.method == 'GET':
         return render_template('query_mw.html')
@@ -163,11 +165,11 @@ def query_mw():
             return redirect('mwindows')
         elif request.form["button"] == 'Email_Request':
             # Check Smartsheet status is Planned
-            status = getVal(sheet_id = request.form["sheetId"], ActId = request.form['ActID'], Val_Header="Estado", token=app.config['TOKEN'])
+            status = getVal(sheet_id = request.form["sheetId"], ActId = request.form['ActID'], Val_Header="Estado", token=application.config['TOKEN'])
             # Check Smartsheet status is Planned
 
             if status == "Planned":
-                recipients = getVal(sheet_id = request.form["sheetId"], ActId = request.form['ActID'], Val_Header="Email_Recipients", token=app.config['TOKEN']).split(", ")
+                recipients = getVal(sheet_id = request.form["sheetId"], ActId = request.form['ActID'], Val_Header="Email_Recipients", token=application.config['TOKEN']).split(", ")
 
                 if recipients == []:
                     error = "Email list is empty"
@@ -189,11 +191,11 @@ def query_mw():
 
         elif request.form["button"] == 'Email_Program':
             # Check Smartsheet status is Requested
-            status = getVal(sheet_id = request.form["sheetId"], ActId = request.form['ActID'], Val_Header="Estado", token=app.config['TOKEN'])
+            status = getVal(sheet_id = request.form["sheetId"], ActId = request.form['ActID'], Val_Header="Estado", token=application.config['TOKEN'])
             # Check Smartsheet status is Requested
 
             if status == "Requested":
-                recipients = getVal(sheet_id = request.form["sheetId"], ActId = request.form['ActID'], Val_Header="Email_Recipients", token=app.config['TOKEN']).split(", ")
+                recipients = getVal(sheet_id = request.form["sheetId"], ActId = request.form['ActID'], Val_Header="Email_Recipients", token=application.config['TOKEN']).split(", ")
                 if recipients == []:
                     error = "Email list is empty"
                     return render_template('mwindows.html', error = error)
@@ -219,7 +221,7 @@ def query_mw():
             else:
                 param = [{"sheetId":request.form["sheetId"]}]
                 # Provide an activities List "acti" of the selected sheet
-                acti = getActi(sheet_id = request.form["sheetId"], token=app.config['TOKEN'])
+                acti = getActi(sheet_id = request.form["sheetId"], token=application.config['TOKEN'])
                 return render_template('act_id.html' , param = param, acti = acti)
         elif request.form["button"] == 'Query_MW':
             param = [{"sheetId":request.form["sheetId"]}]
@@ -239,7 +241,7 @@ def getPN(sheet_id):
         return render_template('schedule_home.html', error = error)
 
 
-@app.route('/schedule_home', methods = ['GET','POST'])
+@application.route('/schedule_home', methods = ['GET','POST'])
 def schedule_home():
     # Read the DB and enable select of work sheet
     try:
@@ -252,7 +254,7 @@ def schedule_home():
 
 
 
-@app.route('/open_query', methods = ['GET','POST'])
+@application.route('/open_query', methods = ['GET','POST'])
 def open_query():
 
     # # Get a list of ActID
@@ -318,15 +320,15 @@ def open_query():
         # Evaluate the value of the status and defined the value of the key Action in order to create each button
 
         if line[8] == "Propuesta":
-            accion = "Enviar Solicitud"
+            accion = "Solicitar VM"
         elif line[8] == "Solicitada":
-            accion = "Enviar Programacion"
+            accion = "Programar VM"
         elif line[8] == "Programada":
-            accion = "Enviar Cancelacion"
+            accion = "Cancelar VM"
         elif line[8] == "Cancelada":
-            accion = "Enviar Solicitud"
+            accion = "Solicitar VM"
         else:
-            accion = "Enviar Solicitud"
+            accion = "Solicitar VM"
         # line = [u'881828-VM03', u'Migracion CMTS Sonsonate', u'Se migrara el CMTS de Sonsonate', u'27/11/2017', u'00:00-04:00', u'Lord Lizarazo', u'20/11/2017', u'Permisos de configuracion', u'Programed', u'dacobos@cisco.com, cdcobos1999@icloud.com','Accion']
 
         dic={}
@@ -342,7 +344,7 @@ def open_query():
         entries[i]["sheetId"] = sheet_id
     return render_template('open_query.html', entries = entries, param = param)
 
-@app.route('/action', methods = ['GET','POST'])
+@application.route('/action', methods = ['GET','POST'])
 def action():
     # Read the DB to get the SheetId based on PID
     try:
@@ -383,7 +385,7 @@ def action():
 
 
     # Get recipients list from Smartsheet
-    recipients = getVal(sheet_id = sheet_id, ActId = activity, Val_Header="Emails_Ventana", token=app.config['TOKEN']).split(", ")
+    recipients = getVal(sheet_id = sheet_id, ActId = activity, Val_Header="Emails_Ventana", token=application.config['TOKEN']).split(", ")
 
     # Validate that there is at leas on email in the recipients list
     if recipients == []:
@@ -434,15 +436,15 @@ def action():
         else:
             pass
 
-    if request.form[activity] == 'Enviar Solicitud':
+    if request.form[activity] == 'Solicitar VM':
         newStatus = "Solicitada"
         subject = "SDVM:Solicitud de ventana de mantenimiento"
         notification = "Notification: Email requesting MW sent successfully"
-    elif request.form[activity] == 'Enviar Programacion':
+    elif request.form[activity] == 'Programar VM':
         newStatus = "Programada"
         subject = "PDVM:Programacion de ventana de mantenimiento"
         notification = "Notification: Email programing MW sent successfully"
-    elif request.form[activity] == 'Enviar Cancelacion':
+    elif request.form[activity] == 'Cancelar VM':
         newStatus = "Cancelada"
         subject = "CDVM:Cancelacion de ventana de mantenimiento"
         notification = "Notification: Email canceling MW sent successfully"
@@ -450,7 +452,8 @@ def action():
     # Define data to fill HTML for Multi Part Mail
     inp = [str(data[0][0]),str(data[0][1]),entries[0],entries[1],entries[2],entries[3],entries[4],entries[5],entries[6],entries[7],newStatus]
     # Send and Evaluate if the Mail return an error
-    if mwMIME(inp, recipients, subject) == None:
+    mailResult = mwMIME(inp, recipients, subject)
+    if mailResult == None:
         # Get Position at Smartsheet of State in order to update
         position = getPosition(sheet_id = sheet_id, ActId = activity, Val_Header = "Estado_Ventana", token=os.environ['SMARTSHEET_ACCESS_TOKEN'])
         # Update the Smartsheet of state Value using the position
@@ -462,14 +465,12 @@ def action():
         error = "Could't sent the email, did not changed anything"
         return redirect(url_for('open_query', sheetId=sheet_id))
 
-@app.route('/edit', methods = ['GET','POST'])
+@application.route('/edit', methods = ['GET','POST'])
 def edit():
     if request.method == ['GET']:
-        print "Using method GET"
         return render_template('edit.html')
 
     elif request.method == ['POST']:
-        print "Using method POST"
         return render_template('edit.html')
 
     # Split argument
@@ -548,7 +549,7 @@ def edit():
     return render_template('edit.html', entries = entries)
 
 
-@app.route('/update', methods = ['GET','POST'])
+@application.route('/update', methods = ['GET','POST'])
 def update():
     # Split PID argument
     PID = request.form["ACT_ID"].split("-")[0]
@@ -617,11 +618,145 @@ def update():
 
 
     response = updateRow(sheet_id=sheet_id, row_id=row_id, columnId=columnId, value = value, token = os.environ['SMARTSHEET_ACCESS_TOKEN'])
-    print response.text
+
     #Update the local file of query
-    sheet = getSheet2(sheet_id = sheet_id, token=app.config['TOKEN'])
+    sheet = getSheet2(sheet_id = sheet_id, token=application.config['TOKEN'])
     sheet = sheet.encode('utf-8')
     with open(os.environ['APP_HOME']+"logs/"+sheet_id,"w") as f:
         f.write(sheet)
     flash('Notification: Entry updated successfully')
     return redirect(url_for('edit', ActID = ActID, sheetId=sheet_id))
+
+
+@application.route('/create', methods = ['GET','POST'])
+def create():
+
+    if request.method == 'GET':
+        PID = request.args.get('PID')
+        try:
+            db = get_db()
+            data = db.execute('select projectName, projectId, sheetId from projects where projectId = ?',[PID]).fetchall()
+        except sqlite3.Error as e:
+            error = "Could't complete the Query: "+e.args[0]
+            return render_template('schedule_home.html')
+        sheet_id = str(data[0][2])
+        entries = [{'PID':PID, 'sheetId':sheet_id}]
+        # Get type of activity and parentId
+        # Ex: param = [{'tipo':'840358-IVM','parentId':'234234234234234'},{'tipo':'840358-IVM','parentId':'234234234234234'}]
+        param = getParam(sheet_id = sheet_id, PID = PID, token = os.environ['SMARTSHEET_ACCESS_TOKEN'])
+        return render_template('create.html', entries=entries, param = param)
+
+    elif request.method == 'POST':
+
+        sheet_id = request.form['sheetId']
+        parentId = request.form['Tipo_Ventana']
+
+        PID = request.form['PID']
+
+        # Get that sheet out of there
+        with open(os.environ['APP_HOME']+"logs/"+sheet_id) as f:
+            sheet = f.read()
+        # Convert the string of the sheet to a sheet in JSON
+        sheet = json.loads(sheet)
+
+        # Get the list of columnId
+        keys = ['ACT_ID','Descripcion', 'Nombre_Ventana', 'Fecha_Ventana', 'Horario_Ventana', 'NCE_Ventana', 'Entrega_Doc_Ventana', 'Requerimientos_Ventana','Estado_Ventana','Emails_Ventana']
+        columnsId = {}
+
+        for column in sheet["columns"]:
+            columnsId[column["title"]]= column["id"]
+
+        for row in sheet["rows"]:
+            columnId = []
+            for cell in row["cells"]:
+                for key in keys:
+                    if cell["columnId"] == columnsId[key]:
+                        if cell["columnId"] == columnsId[key]:
+                            columnId.append(cell["columnId"])
+
+        # Count how many windows exists
+        windows = []
+        for row in sheet["rows"]:
+            for cell in row["cells"]:
+                try:
+                    if cell["columnId"] == columnId[0]:
+                        if PID+"-VM" in cell["value"]:
+                            windows.append(cell["value"])
+                        else:
+                            continue
+                except:
+                    continue
+
+        # Define the new ACT_ID
+        ACT_ID = PID+'-VM'+str(len(windows)+1)
+        # Get the parentID
+        # tipo_ventana = request.form['Tipo_Ventana']
+        # parentId = getParentId(sheet_id = sheet_id, PID = PID, token = os.environ['SMARTSHEET_ACCESS_TOKEN'], tipo_ventana=tipo_ventana)
+
+        print parentId
+        # Filled with HTML Form
+        value = [ACT_ID,request.form['Descripcion'], request.form['Nombre_Ventana'], request.form['Fecha_Ventana'],request.form['Horario_Ventana'],request.form['NCE_Ventana'], request.form['Entrega_Doc_Ventana'],request.form['Requerimientos_Ventana'],'Propuesta',request.form['Emails_Ventana']]
+        CreateResponse = createMW(sheet_id=sheet_id, parentId=parentId, columnId=columnId, value= value, token = os.environ['SMARTSHEET_ACCESS_TOKEN'])
+
+
+        CreateResponse = json.loads(CreateResponse)
+        if CreateResponse["message"] == 'SUCCESS':
+            flash('Notification:MW created successfully')
+            return redirect(url_for('open_query', sheetId=sheet_id))
+        else:
+            error = 'Something went wrong, report to webmaster'
+            flash(error)
+            return redirect(url_for('open_query', sheetId=sheet_id))
+
+@application.route('/specReport', methods = ['GET','POST'])
+def specReport():
+    try:
+        PID = request.args.get('PID')
+    except:
+        PID = None
+
+    # Read the DB to get the SheetId based on PID
+    try:
+        db = get_db()
+        data = db.execute('select projectName, projectId, sheetId from projects where projectId = ?',[PID]).fetchall()
+    except sqlite3.Error as e:
+        error = "Could't complete the Query: "+e.args[0]
+        return render_template('schedule_home.html')
+    sheet_id = str(data[0][2])
+
+
+    SpecReport = getSpecReport(sheet_id, PID)
+    if SpecReport == None:
+        error = 'Something went wrong, could\'t generate the report'
+        return redirect(url_for('schedule_home', error=error))
+    else:
+        return redirect(url_for('schedule_home'))
+        # report_path = os.environ['APP_HOME']+'logs'
+        # return send_from_directory(directory=report_path, filename=SpecReport, as_attachment=True)
+
+@application.route('/GeneralReport', methods = ['GET','POST'])
+def GeneralReport():
+
+    try:
+        db = get_db()
+        lis = db.execute('select projectId, sheetId from projects').fetchall()
+    except:
+        error = 'Something went wrong, could\'t generate the report'
+        return redirect(url_for('schedule_home', error=error))
+
+    # lis = [('840358', '6595213704619908'),('881828', '2239137613932420')]
+    GeneralReport = getGeneralReport(lis)
+    if GeneralReport == None:
+        error = 'Something went wrong, could\'t generate the report'
+        return redirect(url_for('schedule_home', error=error))
+    else:
+        return redirect(url_for('schedule_home'))
+        # report_path = os.environ['APP_HOME']+'logs'
+        # return send_from_directory(directory=report_path, filename=SpecReport, as_attachment=True)
+
+# Download report
+# @application.route('/download/<path:report>', methods=['GET', 'POST'])
+# def download(report):
+#     report_path = app.config['REPORTS_FOLDER']
+#     filename=report
+#     return send_from_directory(directory=report_path, filename=filename, as_attachment=True)

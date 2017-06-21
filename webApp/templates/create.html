@@ -1,0 +1,88 @@
+{% extends "layout.html" %}
+{% block body %}
+
+<div class="content">
+  <h1>Create MW</h1>
+  <br>
+  <p style="color:red;"> * Todos los campos son obligatorios</p>
+
+<form action="{{url_for('create')}}" method="POST">
+  {% for entry in entries %}
+  <input type="text" name="sheetId" value="{{entry.sheetId}}" hidden="True">
+  <input type="text" name="PID" value="{{entry.PID}}" hidden="True">
+  {% endfor %}
+  <table>
+    <tr>
+      <th>Tipo de Ventana
+      </th>
+      <td>
+        <select name="Tipo_Ventana">
+          {% for entry in param %}
+          <dd><option value="{{entry.parentId}}">{{entry.tipo}}</option>
+          {% endfor %}
+
+          <select
+      </td>
+
+    </tr>
+    <tr>
+      <th>Nombre de la Ventana
+      </th>
+      <td><input type="text" name="Nombre_Ventana" placeholder="Ex:Name of MW">
+      </td>
+    </tr>
+    <tr>
+      <th>Descripcion Actividades
+      </th>
+      <td><input type="text" name="Descripcion" placeholder="Ex:Purpose of MW">
+      </td>
+    </tr>
+    <tr>
+      <th>Fecha Actividad
+      </th>
+      <td><input type="text" name="Fecha_Ventana" placeholder="Ex:DD/MM/YY">
+      </td>
+    </tr>
+    <tr>
+      <th>Horario
+      </th>
+      <td><input type="text" name="Horario_Ventana" placeholder="Ex:00:00 - 00:04">
+      </td>
+    </tr>
+    <tr>
+      <th>NCE
+      </th>
+      <td><input type="text" name="NCE_Ventana" placeholder="Ex: Name Last Name">
+      </td>
+    </tr>
+    <tr>
+      <th>Entrega Documentos
+      </th>
+      <td><input type="text" name="Entrega_Doc_Ventana" placeholder="Ex: DD/MM/YY">
+      </td>
+    </tr>
+    <tr>
+      <th>Requerimientos
+      </th>
+      <td><input type="text" name="Requerimientos_Ventana" placeholder="Ex:Access to Node">
+      </td>
+    </tr>
+    <tr>
+      <th>Recipients
+      </th>
+      <td><input type="text" name="Emails_Ventana" placeholder="project-mailer@cisco.com">
+      </td>
+    </tr>
+    <tr>
+      <th>
+        {% for entry in entries %}
+        <a href ="{{url_for('open_query', sheetId=entry.sheetId)}}">Back</a>
+        {% endfor %}
+      </th>
+      <td><input type="submit" name="button" value="Create_Entry">
+      </td>
+    </tr>
+</table>
+</form>
+</div>
+{% endblock %}

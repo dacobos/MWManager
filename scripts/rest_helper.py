@@ -173,3 +173,107 @@ def updateRow(sheet_id, row_id, columnId, value, token):
     headers = {'Authorization': 'Bearer '+token,'Content-Type': 'application/json'}
     response = requests.request("PUT", url, data=payload, headers=headers)
     return response
+
+
+def createMW(sheet_id, parentId, columnId, value, token):
+    url='https://api.smartsheet.com/2.0/sheets/'+sheet_id+'/rows'
+    headers = {'Authorization': 'Bearer '+token,'Content-Type': 'application/json'}
+    payload = "{{\"parentId\": {}, \"cells\":[\
+    {{\"columnId\": {},\"value\": \"{}\"}},\
+    {{\"columnId\": {},\"value\": \"{}\"}},\
+    {{\"columnId\": {},\"value\": \"{}\"}},\
+    {{\"columnId\": {},\"value\": \"{}\"}},\
+    {{\"columnId\": {},\"value\": \"{}\"}},\
+    {{\"columnId\": {},\"value\": \"{}\"}},\
+    {{\"columnId\": {},\"value\": \"{}\"}},\
+    {{\"columnId\": {},\"value\": \"{}\"}},\
+    {{\"columnId\": {},\"value\": \"{}\"}},\
+    {{\"columnId\": {},\"value\": \"{}\"}}]}}"
+    payload = payload.format(parentId, columnId[0], \
+    value[0], columnId[1], value[1], columnId[2], \
+    value[2], columnId[3], value[3], columnId[4], \
+    value[4], columnId[5], value[5], columnId[6], \
+    value[6], columnId[7], value[7], columnId[8], \
+    value[8], columnId[9], value[9])
+    response = requests.request("POST", url, data=payload, headers=headers)
+    return response.text
+
+def getParam(sheet_id, PID, token):
+    # Get that sheet out of there
+    with open(os.environ['APP_HOME']+"logs/"+sheet_id) as f:
+        sheet = f.read()
+    # Convert the string of the sheet to a sheet in JSON
+    sheet = json.loads(sheet)
+
+    # Get the list of columnId
+    keys = ['ACT_ID','Descripcion', 'Nombre_Ventana', 'Fecha_Ventana', 'Horario_Ventana', 'NCE_Ventana', 'Entrega_Doc_Ventana', 'Requerimientos_Ventana','Estado_Ventana','Emails_Ventana']
+    columnsId = {}
+
+    for column in sheet["columns"]:
+        columnsId[column["title"]]= column["id"]
+
+    for row in sheet["rows"]:
+        columnId = []
+        for cell in row["cells"]:
+            for key in keys:
+                if cell["columnId"] == columnsId[key]:
+                    if cell["columnId"] == columnsId[key]:
+                        columnId.append(cell["columnId"])
+
+
+
+    param = []
+    # Get the tipo and parentId
+    for row in sheet["rows"]:
+        dic = {}
+        for cell in row["cells"]:
+            try:
+                if cell["columnId"] == columnId[0]:
+                    if PID+"-VM" in cell["value"]:
+                        continue
+                    else:
+                        dic["tipo"]=cell["value"]
+                        dic["parentId"]=row["id"]
+                        param.append(dic)
+            except:
+                continue
+
+
+    return param
+
+def getParentId(sheet_id, PID, token, tipo_ventana):
+    # Get that sheet out of there
+    with open(os.environ['APP_HOME']+"logs/"+sheet_id) as f:
+        sheet = f.read()
+    # Convert the string of the sheet to a sheet in JSON
+    sheet = json.loads(sheet)
+
+    # Get the list of columnId
+    keys = ['ACT_ID','Descripcion', 'Nombre_Ventana', 'Fecha_Ventana', 'Horario_Ventana', 'NCE_Ventana', 'Entrega_Doc_Ventana', 'Requerimientos_Ventana','Estado_Ventana','Emails_Ventana']
+    columnsId = {}
+
+    for column in sheet["columns"]:
+        columnsId[column["title"]]= column["id"]
+
+
+    for row in sheet["rows"]:
+        columnId = []
+        for cell in row["cells"]:
+            for key in keys:
+                if cell["columnId"] == columnsId[key]:
+                    if cell["columnId"] == columnsId[key]:
+                        columnId.append(cell["columnId"])
+
+    # Get ParentId for  code
+    tipo_ventana_id = None
+
+    for row in sheet["rows"]:
+        for cell in row["cells"]:
+            try:
+                if cell["columnId"] == columnId[0]:
+                    if tipo_ventana in cell["value"]:
+                        parentId = row["id"]
+            except:
+                continue
+
+    return parentId
