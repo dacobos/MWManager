@@ -1,0 +1,58 @@
+{% extends "layout.html" %}
+{% block body %}
+
+<div class="content">
+  <h1>Change Password</h1>
+  <br>
+    <form action="{{url_for('change_pass')}}" method="POST">
+
+    <table>
+      <tr>
+        <td>
+          {% for entry in entries %}
+          <input type="text" name="dummy" value="{{entry.Email_Address}}" disabled="true">
+          <input type="text" name="Email_Address" value="{{entry.Email_Address}}" hidden="true">
+          {% endfor %}
+        </td>
+      </tr>
+      <tr>
+        <td><input type="text" name="newPass" placeholder="New Password"></td>
+      </tr>
+      <tr>
+        <td><input type="text" name="verifyPass" placeholder="Verify Password"></td>
+      </tr>
+      <tr>
+        <td><input type="text" name="Token" placeholder="Smartsheet token"></td>
+      </tr>
+      <tr>
+        <td>
+          <select name="Question">
+            <option>
+              <dd>--</dd>
+            </option>
+            <option>
+              <dd>What was the color of your first car?</dd>
+            </option>
+            <option>
+              <dd>What was the name of your first boss?</dd>
+            </option>
+            <option>
+              <dd>What was the name of your first pet?</dd>
+            </option>
+            <option>
+              <dd>What was the name of your first boyfriend/girlfriend?</dd>
+            </option>
+          </select>
+        </td>
+      </tr>
+      <tr>
+        <td><input type="text" name="Secret" placeholder="Your Answer"></td>
+      </tr>
+      <tr>
+        <td><input type="submit" name="button" value="Change_Password"></td>
+      </tr>
+    </table>
+  </form>
+
+</div>
+{% endblock %}

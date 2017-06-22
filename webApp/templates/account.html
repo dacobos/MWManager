@@ -1,0 +1,63 @@
+{% extends "layout.html" %}
+{% block body %}
+
+<div class="content">
+  <h1>Account</h1>
+  <br>
+
+    <form action="{{url_for('account')}}" method="POST">
+    <table>
+      {% for entry in entries %}
+      <tr>
+        <td>Nombre</td>
+        <td>
+        <input class ="inputs" type="text" name="dummy" value="{{entry.name}}" disabled="true">
+        <input type="text" name="Name" value="{{entry.name}}" hidden="true">
+        </td>
+      </tr>
+      <tr>
+        <td>Apellido</td>
+        <td>
+        <input class ="inputs" type="text" name="dummy" value="{{entry.lastName}}" disabled="true">
+        <input type="text" name="LastName" value="{{entry.lastName}}" hidden="true">
+        </td>
+      </tr>
+      <tr>
+        <td>Email</td>
+        <td>
+        <input class ="inputs" type="text" name="dummy" value="{{entry.email}}" disabled="true">
+        <input type="text" name="Email_Address" value="{{entry.email}}" hidden="true">
+        </td>
+      </tr>
+      <tr>
+        <td>Pregunta</td>
+        <td>
+        <input class ="inputs" type="text" name="dummy" value="{{entry.question}}" disabled="true">
+        <input type="text" name="Question" value="{{entry.question}}" hidden="true">
+        </td>
+      </tr>
+      <tr>
+        <td>Rol</td>
+        <td>
+        <input class ="inputs" type="text" name="dummy" value="{{entry.role}}" disabled="true">
+        <input type="text" name="role" value="{{entry.role}}" hidden="true">
+        </td>
+      </tr>
+      <tr>
+        <td>Smartsheet Token</td>
+        <td>
+        <input class ="inputs" type="text" name="dummy" value="{{entry.token}}" disabled="true">
+        <input type="text" name="role" value="{{entry.token}}" hidden="true">
+        </td>
+      </tr>
+
+      <tr>
+        <td></td>
+        <td><input type="submit" name="button" value="Change_Pass"></td>
+      </tr>
+      {% endfor %}
+    </table>
+  </form>
+  
+</div>
+{% endblock %}

@@ -22,7 +22,6 @@
     <li><a href ="{{url_for('login')}}">Login</a></li>
     {% endif %}
   </ul>
-
 <h1></h1>
 </div>
 <br>
@@ -32,7 +31,24 @@
 {% endfor %}
 {% if error %}<p class=error><strong>Error:</strong> {{ error }}{% endif %}
 
-{% if session.logged_in %}
+
 {% block body %}
+<div class="content">
+  <h1>Login</h1>
+  <br>
+    <form action="{{url_for('login')}}" method="POST">
+    <table>
+      <tr>
+        <td><input class ="inputs" type="text" name="Email_Address" placeholder="Email_Address"></td>
+      </tr>
+      <tr>
+        <td><input class ="inputs" type="password" name="Password" placeholder="Password"></td>
+      </tr>
+      <tr>
+        <td><input type="submit" name="button" value="Login"></td>
+      </tr>
+    </table>
+  </form>
+
+</div>
 {% endblock %}
-{% endif %}

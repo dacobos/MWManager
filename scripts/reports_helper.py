@@ -3,12 +3,26 @@ import sys
 import json
 import requests
 import os
+from os import listdir
 import xlsxwriter
+import datetime
+
 
 
 
 def getSpecReport(sheet_id, PID):
     report_path = os.environ['APP_HOME']+'logs'
+    date = str(datetime.datetime.now())
+    # Get the previuos report name and delete it
+    lis = listdir(report_path)
+    for i in range(len(lis)):
+        if PID in lis[i]:
+            try:
+                print lis[i]
+                os.remove(report_path+'/'+lis[i])
+            except:
+                continue
+
 
     # Get that sheet out of there
     with open(os.environ['APP_HOME']+"logs/"+sheet_id) as f:
@@ -54,9 +68,9 @@ def getSpecReport(sheet_id, PID):
             dic[keys[i]] = line[i]
         entries.append(dic)
 
-
-
-    workbook = xlsxwriter.Workbook(report_path+'/Reporte_Ventanas_'+PID+'.xlsx')
+    # Set the new report name
+    filename = 'Reporte_Ventanas_'+PID+'_'+date+'.xlsx'
+    workbook = xlsxwriter.Workbook(report_path+'/'+filename)
     worksheet = workbook.add_worksheet()
     worksheet.set_column(0, 0, 15)
     worksheet.set_column(1, 1, 25)
@@ -87,18 +101,16 @@ def getSpecReport(sheet_id, PID):
             worksheet.write(row, col, entry[headers[col]],format2)
 
     workbook.close()
-    filename = 'Reporte_Ventanas_'+PID+'.xlsx'
-    # except:
-    #     filename = None
+
+
 
     return filename
 
 
 
-def getEntries(sheet_id, PID):
+def getEntries(sheet_id, PID, token):
     #Create a text file wich contains all the content of the selected sheet_id= '6595213704619908', token=os.environ['SMARTSHEET_ACCESS_TOKEN'],
     #Get the whole sheet of a selected sheet
-    token=os.environ['SMARTSHEET_ACCESS_TOKEN']
     url='https://api.smartsheet.com/2.0/sheets/'+sheet_id
     headers = {'Authorization': 'Bearer '+token,'Content-Type': 'application/json'}
     response = requests.get(url,headers=headers)
@@ -147,18 +159,30 @@ def getEntries(sheet_id, PID):
     return entries
 
 
-def getGeneralReport(lis):
+def getGeneralReport(projectsList, token):
     report_path = os.environ['APP_HOME']+'logs'
+    date = str(datetime.datetime.now())
+    # Get the previuos report name and delete it
+    lis = listdir(report_path)
+    for i in range(len(lis)):
+        if 'Reporte_General_Ventanas' in lis[i]:
+            try:
+                os.remove(report_path+'/'+lis[i])
+            except:
+                continue
+
+    # Build a list with all PIDs
     report = []
-    for l in lis:
+    for l in projectsList:
         sheet_id = str(l[1])
         PID= l[0]
-        entry = getEntries(sheet_id, PID)
+        entry = getEntries(sheet_id, PID, token)
         for ent in entry:
             report.append(ent)
 
-    # try:
-    workbook = xlsxwriter.Workbook(report_path+'/Reporte_General_Ventanas.xlsx')
+    # Set the new report name
+    filename = 'Reporte_General_Ventanas_'+date+'.xlsx'
+    workbook = xlsxwriter.Workbook(report_path+'/'+filename)
     worksheet = workbook.add_worksheet()
     worksheet.set_column(0, 0, 15)
     worksheet.set_column(1, 1, 25)
@@ -188,8 +212,5 @@ def getGeneralReport(lis):
             worksheet.write(row, col, entry[headers[col]],format2)
 
     workbook.close()
-    filename = 'Reporte_General_Ventanas.xlsx'
-    # except:
-    #     filename = None
 
     return filename

@@ -1,0 +1,39 @@
+{% extends "layout.html" %}
+{% block body %}
+
+<div class="content">
+  <h1>Create User</h1>
+  <br>
+    <form action="{{url_for('create_user')}}" method="POST">
+    <table>
+      <tr>
+        <td><input class="inputs" type="text" name="Name" placeholder="Name"></td>
+      </tr>
+      <tr>
+        <td><input class="inputs" type="text" name="LastName" placeholder="LastName"></td>
+      </tr>
+      <tr>
+        <td><input class="inputs" type="text" name="Email_Address" placeholder="Email_Address"></td>
+      </tr>
+      <tr>
+        <td>
+          <select name="Role" class="inputs" >
+            <option>
+              <dd>Admin</dd>
+            </option>
+            <option>
+              <dd>PM</dd>
+            </option>
+            <option>
+              <dd>NCE</dd>
+            </option>
+          </select>
+        </td>
+      </tr>
+      <tr>
+        <td><input type="submit" name="button" value="Create_User"></td>
+      </tr>
+    </table>
+  </form>
+</div>
+{% endblock %}

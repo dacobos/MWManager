@@ -15,8 +15,12 @@
 # Modules Required for python web application
 from flask import Flask, request, session, g, redirect, url_for, abort, \
      render_template, flash, Response, send_from_directory
+
+
 import sqlite3
 from os import rename
+from os import listdir
+from os import remove
 import os
 import threading
 import subprocess
@@ -49,7 +53,6 @@ application.config.update(dict(
     PASSWORD='default',
     LOG_FILE = os.environ['APP_HOME']+'logs/logfile.log',
     ERROR = None,
-    TOKEN=os.environ['SMARTSHEET_ACCESS_TOKEN'],
     WORKSPACE = os.environ['SS_WORKSPACE']
 
 
@@ -90,10 +93,10 @@ def init_db():
 
 def update_db():
     db = get_db()
-    folders = getFolders(workspace = application.config['WORKSPACE'], token=application.config['TOKEN'])
+    folders = getFolders(workspace = application.config['WORKSPACE'], token=session.get('token'))
     xxx = []
     for folder in folders["folders"]:
-        sheets = getSheets(folderId = str(folder["id"]), token=application.config['TOKEN'])
+        sheets = getSheets(folderId = str(folder["id"]), token=session.get('token'))
         for sheet in sheets["sheets"]:
             sheetName = sheet["name"].split("-")
             sheetId = sheet["id"]
@@ -119,6 +122,8 @@ def initdb_command():
 # Start of Web App
 @application.route('/')
 def index():
+    if not session.get('logged_in'):
+        return redirect(url_for('login'))
     return render_template('index.html')
 
 # Version1
@@ -134,7 +139,7 @@ def mwindows():
 
 
 def getQuery(request):
-    sheet = getSheet(sheet_id = request.form["sheetId"], token=application.config['TOKEN'])
+    sheet = getSheet(sheet_id = request.form["sheetId"], token=session.get('token'))
     row = getRow(rows = sheet["rows"], act_id = request.form["actId"])
     if row:
         pidName = getPidName(request.form["sheetId"])
@@ -165,11 +170,11 @@ def query_mw():
             return redirect('mwindows')
         elif request.form["button"] == 'Email_Request':
             # Check Smartsheet status is Planned
-            status = getVal(sheet_id = request.form["sheetId"], ActId = request.form['ActID'], Val_Header="Estado", token=application.config['TOKEN'])
+            status = getVal(sheet_id = request.form["sheetId"], ActId = request.form['ActID'], Val_Header="Estado", token=session.get('token'))
             # Check Smartsheet status is Planned
 
             if status == "Planned":
-                recipients = getVal(sheet_id = request.form["sheetId"], ActId = request.form['ActID'], Val_Header="Email_Recipients", token=application.config['TOKEN']).split(", ")
+                recipients = getVal(sheet_id = request.form["sheetId"], ActId = request.form['ActID'], Val_Header="Email_Recipients", token=session.get('token')).split(", ")
 
                 if recipients == []:
                     error = "Email list is empty"
@@ -178,8 +183,8 @@ def query_mw():
                 inp = [request.form['Project'],request.form['PID'],request.form['ActID'],request.form['Nombre'], request.form['Descripcion'], request.form['Fecha'], request.form['Horario'], request.form['NCE'], request.form['Entrega_Doc'], request.form['Requerimientos'],"Requested"]
                 if mwMIME(inp, recipients, subject = "SDVM:Solicitud de ventana de mantenimiento") == None:
                     # Update Smartsheet status to Requested
-                    position = getPosition(sheet_id = request.form["sheetId"], ActId = request.form['ActID'], Val_Header = "Estado", token=os.environ['SMARTSHEET_ACCESS_TOKEN'])
-                    response = updateVal(sheet_id = request.form["sheetId"], rowId = position["rowId"], columnId = position["columnId"],  newStatus="Requested", token=os.environ['SMARTSHEET_ACCESS_TOKEN'])
+                    position = getPosition(sheet_id = request.form["sheetId"], ActId = request.form['ActID'], Val_Header = "Estado", token=session.get('token'))
+                    response = updateVal(sheet_id = request.form["sheetId"], rowId = position["rowId"], columnId = position["columnId"],  newStatus="Requested", token=session.get('token'))
                     # Update Smartsheet status to Requested
                     flash('Notification: Email requesting MW sent successfully')
                     return redirect(url_for('query_mw'))
@@ -191,11 +196,11 @@ def query_mw():
 
         elif request.form["button"] == 'Email_Program':
             # Check Smartsheet status is Requested
-            status = getVal(sheet_id = request.form["sheetId"], ActId = request.form['ActID'], Val_Header="Estado", token=application.config['TOKEN'])
+            status = getVal(sheet_id = request.form["sheetId"], ActId = request.form['ActID'], Val_Header="Estado", token=session.get('token'))
             # Check Smartsheet status is Requested
 
             if status == "Requested":
-                recipients = getVal(sheet_id = request.form["sheetId"], ActId = request.form['ActID'], Val_Header="Email_Recipients", token=application.config['TOKEN']).split(", ")
+                recipients = getVal(sheet_id = request.form["sheetId"], ActId = request.form['ActID'], Val_Header="Email_Recipients", token=session.get('token')).split(", ")
                 if recipients == []:
                     error = "Email list is empty"
                     return render_template('mwindows.html', error = error)
@@ -203,8 +208,8 @@ def query_mw():
                 inp = [request.form['Project'],request.form['PID'],request.form['ActID'],request.form['Nombre'], request.form['Descripcion'], request.form['Fecha'], request.form['Horario'], request.form['NCE'], request.form['Entrega_Doc'], request.form['Requerimientos'],"Programed"]
                 if mwMIME(inp, recipients, subject = "PDVM:Programacion de ventana de mantenimiento") == None:
                     # Update Smartsheet status to Programed
-                    position = getPosition(sheet_id = request.form["sheetId"], ActId = request.form['ActID'], Val_Header = "Estado", token=os.environ['SMARTSHEET_ACCESS_TOKEN'])
-                    response = updateVal(sheet_id = request.form["sheetId"], rowId = position["rowId"], columnId = position["columnId"],  newStatus="Programed", token=os.environ['SMARTSHEET_ACCESS_TOKEN'])
+                    position = getPosition(sheet_id = request.form["sheetId"], ActId = request.form['ActID'], Val_Header = "Estado", token=session.get('token'))
+                    response = updateVal(sheet_id = request.form["sheetId"], rowId = position["rowId"], columnId = position["columnId"],  newStatus="Programed", token=session.get('token'))
                     # Update Smartsheet status to Programed
                     flash('Notification: Email programing MW sent successfully')
                     return redirect(url_for('query_mw'))
@@ -221,7 +226,7 @@ def query_mw():
             else:
                 param = [{"sheetId":request.form["sheetId"]}]
                 # Provide an activities List "acti" of the selected sheet
-                acti = getActi(sheet_id = request.form["sheetId"], token=application.config['TOKEN'])
+                acti = getActi(sheet_id = request.form["sheetId"], token=session.get('token'))
                 return render_template('act_id.html' , param = param, acti = acti)
         elif request.form["button"] == 'Query_MW':
             param = [{"sheetId":request.form["sheetId"]}]
@@ -268,8 +273,8 @@ def open_query():
         sheet_id = request.args.get('sheetId')
 
 
-    #Create a text file wich contains all the content of the selected sheet_id= '6595213704619908', token=os.environ['SMARTSHEET_ACCESS_TOKEN'],
-    sheet = getSheet2(sheet_id = sheet_id, token=os.environ['SMARTSHEET_ACCESS_TOKEN'])
+    #Create a text file wich contains all the content of the selected sheet_id= '6595213704619908', token=session.get('token'),
+    sheet = getSheet2(sheet_id = sheet_id, token=session.get('token'))
     sheet = sheet.encode('utf-8')
     with open(os.environ['APP_HOME']+"logs/"+sheet_id,"w") as f:
         f.write(sheet)
@@ -385,7 +390,7 @@ def action():
 
 
     # Get recipients list from Smartsheet
-    recipients = getVal(sheet_id = sheet_id, ActId = activity, Val_Header="Emails_Ventana", token=application.config['TOKEN']).split(", ")
+    recipients = getVal(sheet_id = sheet_id, ActId = activity, Val_Header="Emails_Ventana").split(", ")
 
     # Validate that there is at leas on email in the recipients list
     if recipients == []:
@@ -455,10 +460,10 @@ def action():
     mailResult = mwMIME(inp, recipients, subject)
     if mailResult == None:
         # Get Position at Smartsheet of State in order to update
-        position = getPosition(sheet_id = sheet_id, ActId = activity, Val_Header = "Estado_Ventana", token=os.environ['SMARTSHEET_ACCESS_TOKEN'])
+        position = getPosition(sheet_id = sheet_id, ActId = activity, Val_Header = "Estado_Ventana", token=session.get('token'))
         # Update the Smartsheet of state Value using the position
 
-        response = updateVal(sheet_id = sheet_id, rowId = position["rowId"], columnId = position["columnId"],  newStatus=newStatus, token=os.environ['SMARTSHEET_ACCESS_TOKEN'])
+        response = updateVal(sheet_id = sheet_id, rowId = position["rowId"], columnId = position["columnId"],  newStatus=newStatus, token=session.get('token'))
         flash(notification)
         return redirect(url_for('open_query', sheetId=sheet_id))
     else:
@@ -617,10 +622,10 @@ def update():
 
 
 
-    response = updateRow(sheet_id=sheet_id, row_id=row_id, columnId=columnId, value = value, token = os.environ['SMARTSHEET_ACCESS_TOKEN'])
+    response = updateRow(sheet_id=sheet_id, row_id=row_id, columnId=columnId, value = value, token = session.get('token'))
 
     #Update the local file of query
-    sheet = getSheet2(sheet_id = sheet_id, token=application.config['TOKEN'])
+    sheet = getSheet2(sheet_id = sheet_id, token=session.get('token'))
     sheet = sheet.encode('utf-8')
     with open(os.environ['APP_HOME']+"logs/"+sheet_id,"w") as f:
         f.write(sheet)
@@ -643,7 +648,7 @@ def create():
         entries = [{'PID':PID, 'sheetId':sheet_id}]
         # Get type of activity and parentId
         # Ex: param = [{'tipo':'840358-IVM','parentId':'234234234234234'},{'tipo':'840358-IVM','parentId':'234234234234234'}]
-        param = getParam(sheet_id = sheet_id, PID = PID, token = os.environ['SMARTSHEET_ACCESS_TOKEN'])
+        param = getParam(sheet_id = sheet_id, PID = PID, token = session.get('token'))
         return render_template('create.html', entries=entries, param = param)
 
     elif request.method == 'POST':
@@ -688,15 +693,21 @@ def create():
                     continue
 
         # Define the new ACT_ID
-        ACT_ID = PID+'-VM'+str(len(windows)+1)
+        for i in range(1000):
+            if PID+'-VM'+str(len(windows)+i) in windows:
+                continue
+            else:
+                ACT_ID = PID+'-VM'+str(len(windows)+i)
+                break
+
         # Get the parentID
         # tipo_ventana = request.form['Tipo_Ventana']
-        # parentId = getParentId(sheet_id = sheet_id, PID = PID, token = os.environ['SMARTSHEET_ACCESS_TOKEN'], tipo_ventana=tipo_ventana)
+        # parentId = getParentId(sheet_id = sheet_id, PID = PID, token = session.get('token'), tipo_ventana=tipo_ventana)
 
-        print parentId
         # Filled with HTML Form
+
         value = [ACT_ID,request.form['Descripcion'], request.form['Nombre_Ventana'], request.form['Fecha_Ventana'],request.form['Horario_Ventana'],request.form['NCE_Ventana'], request.form['Entrega_Doc_Ventana'],request.form['Requerimientos_Ventana'],'Propuesta',request.form['Emails_Ventana']]
-        CreateResponse = createMW(sheet_id=sheet_id, parentId=parentId, columnId=columnId, value= value, token = os.environ['SMARTSHEET_ACCESS_TOKEN'])
+        CreateResponse = createMW(sheet_id=sheet_id, parentId=parentId, columnId=columnId, value= value, token = session.get('token'))
 
 
         CreateResponse = json.loads(CreateResponse)
@@ -710,6 +721,7 @@ def create():
 
 @application.route('/specReport', methods = ['GET','POST'])
 def specReport():
+
     try:
         PID = request.args.get('PID')
     except:
@@ -724,13 +736,13 @@ def specReport():
         return render_template('schedule_home.html')
     sheet_id = str(data[0][2])
 
-
     SpecReport = getSpecReport(sheet_id, PID)
+    print SpecReport
     if SpecReport == None:
         error = 'Something went wrong, could\'t generate the report'
         return redirect(url_for('schedule_home', error=error))
     else:
-        return redirect(url_for('schedule_home'))
+        return redirect(url_for('download',report = SpecReport))
         # report_path = os.environ['APP_HOME']+'logs'
         # return send_from_directory(directory=report_path, filename=SpecReport, as_attachment=True)
 
@@ -739,24 +751,192 @@ def GeneralReport():
 
     try:
         db = get_db()
-        lis = db.execute('select projectId, sheetId from projects').fetchall()
+        projectsList = db.execute('select projectId, sheetId from projects').fetchall()
     except:
         error = 'Something went wrong, could\'t generate the report'
         return redirect(url_for('schedule_home', error=error))
 
-    # lis = [('840358', '6595213704619908'),('881828', '2239137613932420')]
-    GeneralReport = getGeneralReport(lis)
+    # projectsList = [('840358', '6595213704619908'),('881828', '2239137613932420')]
+    GeneralReport = getGeneralReport(projectsList, token=session.get('token'))
     if GeneralReport == None:
         error = 'Something went wrong, could\'t generate the report'
         return redirect(url_for('schedule_home', error=error))
     else:
-        return redirect(url_for('schedule_home'))
+        return redirect(url_for('download',report = GeneralReport))
         # report_path = os.environ['APP_HOME']+'logs'
         # return send_from_directory(directory=report_path, filename=SpecReport, as_attachment=True)
 
 # Download report
-# @application.route('/download/<path:report>', methods=['GET', 'POST'])
-# def download(report):
-#     report_path = app.config['REPORTS_FOLDER']
-#     filename=report
-#     return send_from_directory(directory=report_path, filename=filename, as_attachment=True)
+@application.route('/download', methods=['GET', 'POST'])
+def download():
+    filename = request.args.get("report")
+    report_path = os.environ['APP_HOME']+'logs'
+    return send_from_directory(directory=report_path, filename=filename, as_attachment=True)
+
+
+@application.route('/create_user', methods = ['GET','POST'])
+def create_user():
+    if request.method == 'GET':
+        return render_template('create_user.html')
+    elif request.method == 'POST':
+        # Get the Variables
+        values = [request.form["Name"], request.form["LastName"],request.form["Role"],request.form["Email_Address"]]
+        if '' in values:
+            error = "All fields are mandatory"
+            return redirect('create_user', error = error)
+        # Add a temporary password
+        username = request.form["Email_Address"].split('@')[0]
+        password = '1{}3{}1{}3{}0{}6{}1{}7'.format(username[0],username[0],username[3],username[3],username[5],username[5],username[0])
+        values.append(password)
+        values.append(request.form["Email_Address"])
+
+        # Insert to DB if not exists
+        try:
+            db = get_db()
+            # Insert into DB only if does not exists
+            db.execute('insert into users (name, lastName, role, email, password) select ?,?,?,?,? where not exists (select 1 from users where email = ?);',values)
+            db.commit()
+            flash('Notification: User created successfully')
+            return redirect('create_user')
+        except sqlite3.Error as e:
+            error = "Could't complete the Query: "+e.args[0]
+            return redirect('create_user', error=error)
+
+
+        # Send email notification
+
+@application.route('/login', methods = ['GET','POST'])
+def login():
+    if request.method == 'GET':
+        return render_template('login.html')
+
+    elif request.method == 'POST':
+        email = request.form["Email_Address"]
+        username = request.form["Email_Address"].split('@')[0]
+        tempPass = '1{}3{}1{}3{}0{}6{}1{}7'.format(username[0],username[0],username[3],username[3],username[5],username[5],username[0])
+        password = request.form["Password"]
+        print password
+
+        try:
+            db = get_db()
+            credentials = db.execute('select email, password, role, token from users where email = ?;',[email]).fetchall()
+
+            if credentials == []:
+                error = 'Username '+email+' does not exists'
+                return render_template('login.html', error=error)
+            elif credentials != []:
+                role = credentials[0][2]
+                if credentials[0][1] == password:
+                    if password == tempPass:
+
+                        session['logged_in'] = True
+                        session['email'] = email
+                        session['role'] = role
+                        error = "Authenticated with temporary pass, change password and set security question"
+                        entries = [{'Email_Address':email}]
+                        return render_template('change_pass.html', error=error, entries = entries)
+                    else:
+                        token = credentials[0][3]
+                        session['logged_in'] = True
+                        session['email'] = email
+                        session['role'] = role
+                        session['token'] = token
+                else:
+                    error = 'Incorrect password'
+                    return render_template('login.html', error=error)
+            return redirect('/')
+        except sqlite3.Error as e:
+            error = "Could't complete the Query: "+e.args[0]
+            print error
+            return render_template('login.html', error=error)
+
+@application.route('/logout')
+def logout():
+    session.pop('logged_in', None)
+    session.pop('email', None)
+    session.pop('role', None)
+    flash('You were logged out')
+    return redirect(url_for('login'))
+
+
+@application.route('/change_pass', methods = ['GET','POST'])
+def change_pass():
+    if request.method == 'GET':
+        return render_template('change_pass.html')
+    elif request.method == 'POST':
+        if request.form["Question"] == '--':
+            error = 'You must select the security question'
+            return render_template('change_pass.html', error=error)
+        if request.form["newPass"] != request.form["verifyPass"]:
+            error = 'Passwords do not match'
+            return render_template('change_pass.html', error=error)
+        if request.form["Secret"] == '':
+            error = 'You must answer the question'
+            return render_template('change_pass.html', error=error)
+        if request.form["Token"] == '':
+            error = 'You must enter the smartsheet token'
+            return render_template('change_pass.html', error=error)
+        email = request.form["Email_Address"]
+        password = request.form["newPass"]
+        question = request.form["Question"]
+        secret = request.form["Secret"]
+        token = request.form["Token"]
+        values = [password, question, secret, token, email]
+        try:
+            db = get_db()
+            db.execute('update users set password = ?, question = ?, secret = ?, token = ?  where email = (?)',values)
+            db.commit()
+        except sqlite3.Error as e:
+            error = "Could't complete the Query: "+e.args[0]
+            print error
+            return render_template('index.html', error=error)
+
+        flash('Notification:Account updated successfully')
+        return redirect(url_for('account'))
+
+@application.route('/account', methods = ['GET','POST'])
+def account():
+    email = session.get('email')
+
+    if request.method == 'GET':
+        try:
+            db = get_db()
+            entries = db.execute('select * from users where email = ?;',[email]).fetchall()
+
+            return render_template('account.html', entries = entries)
+        except sqlite3.Error as e:
+            error = "Could't complete the Query: "+e.args[0]
+            print error
+            return render_template('account.html', error=error)
+
+    elif request.method == 'POST':
+        email = request.form["Email_Address"]
+        entries = [{'Email_Address':email}]
+        return render_template('change_pass.html', entries = entries)
+
+
+@application.route('/admin', methods = ['GET'])
+def admin():
+    try:
+        db = get_db()
+        entries = db.execute('select * from users;').fetchall()
+        return render_template('admin.html', entries = entries)
+    except sqlite3.Error as e:
+        error = "Could't complete the Query: "+e.args[0]
+        print error
+        return render_template('admin.html', error=error)
+
+
+@application.route('/delete_user', methods = ['GET','POST'])
+def delete_user():
+    email = request.args.get('email')
+    try:
+        db = get_db()
+        db.execute('delete from users where email = ?;',[email])
+        db.commit()
+        flash('Notification: User deleted')
+        return redirect(url_for('admin'))
+    except sqlite3.Error as e:
+        error = "Could't complete the Query: "+e.args[0]
+        print error
+        return render_template('admin.html', error=error)

@@ -104,11 +104,12 @@ def getPosition(sheet_id, ActId, Val_Header, token):
 
     return result
 # Call of function Ex: recipients = getVal(sheet_id = '6595213704619908', ActId = '840358-VM01', Val_Header="Emails_Ventana", token=os.environ['SMARTSHEET_ACCESS_TOKEN']).split(", ")
-def getVal(sheet_id, ActId, Val_Header, token):
+def getVal(sheet_id, ActId, Val_Header):
     with open(os.environ['APP_HOME']+"logs/"+sheet_id) as f:
         sheet = f.read()
     # Convert the string of the sheet to a sheet in JSON
     sheet = json.loads(sheet)
+    print sheet
 
     for row in sheet["columns"]:
         if row["title"] == Val_Header:
@@ -120,7 +121,6 @@ def getVal(sheet_id, ActId, Val_Header, token):
                 result = row["cells"][Val_index]["value"]
         except:
             continue
-
 
     return result
 

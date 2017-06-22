@@ -1,0 +1,31 @@
+{% extends "layout.html" %}
+{% block body %}
+
+<div class="content">
+  <h1>Admin</h1>
+  <br>
+    <table>
+      <tr>
+        <th>Nombre</th>
+        <th>Apellido</th>
+        <th>Email</th>
+        <th>Rol</th>
+        <th>Delete</th>
+      </tr>
+      {% for entry in entries %}
+      <tr>
+        <td>{{entry.name}}</td>
+        <td>{{entry.lastName}}</td>
+        <td>{{entry.email}}</td>
+        <td>{{entry.role}}</td>
+        <td><a href ="{{url_for('delete_user', email=entry.email)}}">Delete</a></td>
+      </tr>
+      {% endfor %}
+    </table>
+
+  <h3>
+  <a href ="{{url_for('create_user')}}">Add User</a>
+  </h3>
+
+</div>
+{% endblock %}

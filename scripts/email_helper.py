@@ -17,8 +17,9 @@ from email.mime.text import MIMEText
 import os
 import socks
 
-socks.setdefaultproxy(socks.SOCKS5, 'proxy-rtp-1', 1080)
-socks.wrapmodule(smtplib)
+# Uncomment this in order to use the APP from the Server in SJU
+# socks.setdefaultproxy(socks.SOCKS5, 'proxy-rtp-1', 1080)
+# socks.wrapmodule(smtplib)
 
 
 def mwMIME(inp, recipients, subject):
